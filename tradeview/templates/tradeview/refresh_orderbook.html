@@ -1,0 +1,180 @@
+<!-- Bootstrap core CSS -->
+<link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Custom fonts for this template -->
+<link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/vendor/simple-line-icons/css/simple-line-icons.css">
+<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
+
+<!-- Plugin CSS -->
+<link rel="stylesheet" href="/static/device-mockups/device-mockups.min.css">
+
+<!-- Custom styles for this template -->
+<link href="/static/css/new-age.min.css" rel="stylesheet">
+
+
+<div id="bids" class="depth-chart">
+<h3>Bids</h3>
+</div>
+
+<div id="asks" class="depth-chart">
+<h3>Asks</h3>
+</div>
+
+<script type="text/javascript">
+  /** BIDS =============================================== */
+  function bids (__id) {
+    var margin = {top: 12, right: 0, bottom: 12, left: 0},
+      width = 170 - margin.left - margin.right,
+      height = 150 - margin.top - margin.bottom
+    // set the ranges
+    var x = d3.scaleBand()
+      .range([0, width])
+      .padding(0.1)
+    var y = d3.scaleLinear()
+      .range([height, 0])
+    // append the svg object to a div ID
+    var svg = d3.select('#' + __id).append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+    var prefixSum = function (arr) {
+      var builder = function (acc, n) {
+        var lastNum = acc.length > 0 ? acc[acc.length-1] : 0;
+        acc.push(lastNum + n);
+        return acc;
+      };
+      return _.reduce(arr, builder, []);
+    }
+    var data = []
+    var __cum_data = []
+    // get the data
+    //d3.json('order_book2.json', function (__order_book) {
+      data = []
+      console.log("Hello");
+
+
+      var __order_book = {{ orderbook|safe }};
+      // create cumulative data array
+      __cum_data = []
+      console.log('__order_book bids', __order_book)
+      for (var i = 0; i < __order_book.bids.length; i++) {
+        __cum_data.push(__order_book.bids[i].amount)
+      }
+      var cum_data_array = prefixSum(__cum_data)
+
+      // final data array
+      for (var i = 0; i < __order_book.bids.length; i++) {
+        data.push({
+          idx: __order_book.bids[i].price,
+          orders: cum_data_array[i]
+        })
+      }
+
+      // reverse data for bids
+      data = _.reverse(data)
+      data.forEach(function (d) {
+        d.orders = +d.orders
+      })
+      // Scale the range of the data in the domains
+      x.domain(data.map(function (d) { return d.idx }))
+      y.domain([0, d3.max(data, function (d) { return d.orders })])
+      svg.selectAll('.bar-bids')
+        .remove('rect')
+      // append the rectangles for the bar chart
+      svg.selectAll('.bar')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('class', 'bar-bids')
+        .attr('x', function (d) { return x(d.idx) })
+        .attr('width', x.bandwidth())
+        .attr('y', function (d) { return y(d.orders) })
+        .attr('height', function (d) { return height - y(d.orders) })
+    //})
+  };
+  /** ASKS =============================================== */
+  function asks (__id) {
+    var margin = {top: 12, right: 12, bottom: 12, left: 0},
+      width = 170 - margin.left - margin.right,
+      height = 150 - margin.top - margin.bottom
+    // set the ranges
+    var x = d3.scaleBand()
+      .range([0, width])
+      .padding(0.1)
+    var y = d3.scaleLinear()
+      .range([height, 0])
+    // append the svg object to a div ID
+    var svg = d3.select('#' + __id).append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+    var prefixSum = function (arr) {
+      var builder = function (acc, n) {
+        var lastNum = acc.length > 0 ? acc[acc.length-1] : 0;
+        acc.push(lastNum + n);
+        return acc;
+      };
+      return _.reduce(arr, builder, []);
+    }
+    //var data = []
+    //var __cum_data = []
+    // get the data
+   // d3.json('order_book2.json', function (__order_book) {
+      var data = []
+      var __cum_data = []
+      var __order_book = {{ orderbook|safe }}
+      console.log('__order_book asks', __order_book);
+      for (var i = 0; i < __order_book.asks.length; i++) {
+        __cum_data.push(__order_book.asks[i].amount)
+      }
+
+      // create cumulative data array
+      var cum_data_array = prefixSum(__cum_data)
+
+      // final data array
+      for (var i = 0; i < __order_book.asks.length; i++) {
+        data.push({
+          idx: __order_book.asks[i].price,
+          orders: cum_data_array[i]
+        })
+      }
+      data.forEach(function (d) {
+        d.orders = +d.orders
+      })
+      // Scale the range of the data in the domains
+      x.domain(data.map(function (d) { return d.idx }))
+      y.domain([0, d3.max(data, function (d) { return d.orders })])
+      svg.selectAll('.bar-asks')
+        .remove('rect')
+      // append the rectangles for the bar chart
+      svg.selectAll('.bar')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('class', 'bar-asks')
+        .attr('x', function (d) { return x(d.idx) })
+        .attr('width', x.bandwidth())
+        .attr('y', function (d) { return y(d.orders) })
+        .attr('height', function (d) { return height - y(d.orders) })
+    //})
+  };
+  // call functions with div ID's
+  bids("bids")
+  asks("asks")
+</script>
+<!-- Bootstrap core JavaScript -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Plugin JavaScript -->
+<script src="/static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for this template -->
+<script src="/static/js/new-age.min.js"></script>
