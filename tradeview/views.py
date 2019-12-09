@@ -27,8 +27,8 @@ def get_data():
     bidask['asks'] = asks_dict
     bidask['bids'] = bids_dict
 
-    data['asks'] = [{'price':float(i[0]), 'amount':float(i[1])} for i in data['asks']][:10]
-    data['bids'] = [{'price':float(i[0]), 'amount':float(i[1])} for i in data['bids']][:10]
+    data['asks'] = [{'price': float(i[0]), 'amount':float(i[1])} for i in data['asks']][:10]
+    data['bids'] = [{'price': float(i[0]), 'amount':float(i[1])} for i in data['bids']][:10]
     return data
 
 def index(request):
