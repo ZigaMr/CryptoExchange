@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from django.template import loader, Context
 import requests
@@ -6,8 +6,8 @@ import pandas as pd
 from .models import tradeview_asks, tradeview_bids, tradeview_pairs
 import sqlite3 as db
 import datetime as dt
-
-
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login, authenticate
 
 def get_data():
     con = db.connect('db.sqlite3')
@@ -22,12 +22,12 @@ def get_data():
         asks['Price'] = [i[0] for i in data['asks']]
         asks['Volume'] = [i[1] for i in data['asks']]
 
-        asks.price = asks.Price.apply(float)
-        asks.quantity = asks.Volume.apply(float)
+        # asks.price = asks.Price.apply(float)
+        # asks.quantity = asks.Volume.apply(float)
         asks['TimeStamp'] = dt.datetime.utcnow()
         asks['ID_pair_id'] = id
-        bids.price = bids.Price.apply(float)
-        bids.quantity = bids.Volume.apply(float)
+        # bids.price = bids.Price.apply(float)
+        # bids.quantity = bids.Volume.apply(float)
         bids['TimeStamp'] = dt.datetime.utcnow()
         bids['ID_pair_id'] = id
 
@@ -56,5 +56,18 @@ def index(request):
     return render(request, 'index.html', {'orderbook': get_data_from_db()})
 
 def refresh_orderbook(request):
-
     return render(request, 'refresh_orderbook.html', {'orderbook': get_data_from_db()})
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            return redirect('index')
+    else:
+        form = UserCreationForm()
+    return render(request, 'signup.html', {'form': form})

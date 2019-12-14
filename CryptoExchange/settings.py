@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'tradeview.apps.TradeViewConfig',
-    'tradeview',
+    'tradeview.apps.TradeViewConfig',
+    # 'tradeview',
     # 'background_task',
 ]
 
@@ -57,7 +57,7 @@ ROOT_URLCONF = 'CryptoExchange.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [r'C:\Users\Ziga\Desktop\Projekti\DjangoProjects\CryptoExchange\tradeview\templates\tradeview'],
+        'DIRS': [BASE_DIR + r'\tradeview\templates\tradeview'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -123,3 +123,5 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGIN_REDIRECT_URL='/tradeview/'
