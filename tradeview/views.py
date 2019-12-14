@@ -3,43 +3,58 @@ from django.http import HttpResponse
 from django.template import loader, Context
 import requests
 import pandas as pd
+from .models import tradeview_asks, tradeview_bids, tradeview_pairs
+import sqlite3 as db
+import datetime as dt
+
+
 
 def get_data():
-    data = requests.get(r'https://www.bitstamp.net/api/v2/order_book/ethbtc')
-    data = data.json()
+    con = db.connect('db.sqlite3')
+    for id, buy, sell in tradeview_pairs.objects.values_list():
+        data = requests.get(r'https://www.bitstamp.net/api/v2/order_book/{}{}'.format(buy.lower(), sell.lower()))
+        data = data.json()
 
-    bids = pd.DataFrame()
-    bids['quantity'] = [i[1] for i in data['bids']]
-    bids['price'] = [i[0] for i in data['bids']]
-    asks = pd.DataFrame()
-    asks['price'] = [i[0] for i in data['asks']]
-    asks['quantity'] = [i[1] for i in data['asks']]
+        bids = pd.DataFrame()
+        bids['Volume'] = [i[1] for i in data['bids']]
+        bids['Price'] = [i[0] for i in data['bids']]
+        asks = pd.DataFrame()
+        asks['Price'] = [i[0] for i in data['asks']]
+        asks['Volume'] = [i[1] for i in data['asks']]
 
-    asks.price = asks.price.apply(float)
-    asks.quantity = asks.quantity.apply(float)
+        asks.price = asks.Price.apply(float)
+        asks.quantity = asks.Volume.apply(float)
+        asks['TimeStamp'] = dt.datetime.utcnow()
+        asks['ID_pair_id'] = id
+        bids.price = bids.Price.apply(float)
+        bids.quantity = bids.Volume.apply(float)
+        bids['TimeStamp'] = dt.datetime.utcnow()
+        bids['ID_pair_id'] = id
 
-    bids.price = bids.price.apply(float)
-    bids.quantity = bids.quantity.apply(float)
+        asks.to_sql(name='tradeview_tradeview_asks', con=con, if_exists='replace', index=False)
+        bids.to_sql(name='tradeview_tradeview_bids', con=con, if_exists='replace', index=False)
+    return
 
-    bids_dict = {x[1]:x[0] for x in bids.itertuples(index=False)}
-    asks_dict = {x[0]:x[1] for x in asks.itertuples(index=False)}
+def get_data_from_db():
+    con = db.connect('db.sqlite3')
+
+    bids = pd.read_sql('select Price, Volume, TimeStamp from tradeview_tradeview_bids', con=con)
+    asks = pd.read_sql(' select Price, Volume, TimeStamp from tradeview_tradeview_asks', con=con)
+
+    if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
+        print('Update orderbook')
+        get_data()
+    bids_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in bids.itertuples(index=False)][:10]
+    asks_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in asks.itertuples(index=False)][:10]
     bidask = dict()
     bidask['asks'] = asks_dict
     bidask['bids'] = bids_dict
-
-    data['asks'] = [{'price': float(i[0]), 'amount':float(i[1])} for i in data['asks']][:10]
-    data['bids'] = [{'price': float(i[0]), 'amount':float(i[1])} for i in data['bids']][:10]
-    return data
+    return bidask
 
 def index(request):
-    template = loader.get_template('index.html')
-    context = {}
-    # return template('glavni.html', mail=None, geslo=None,ime=None,priimek=None, napaka_registriraj=None,napaka_prijava=None, orderbook=data)
-    return render(request, 'index.html', {'orderbook': get_data()})
-    # return HttpResponse(template.render({'orderbook': get_data()}, request))
+    get_data()
+    return render(request, 'index.html', {'orderbook': get_data_from_db()})
 
 def refresh_orderbook(request):
-    template = loader.get_template('refresh_orderbook.html')
-    # results = get_data()
-    # return render(request, 'refresh_orderbook.html', {'orderbook': get_data()})
-    return HttpResponse(template.render({'orderbook': get_data()}, request))
+
+    return render(request, 'refresh_orderbook.html', {'orderbook': get_data_from_db()})
