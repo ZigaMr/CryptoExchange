@@ -27,7 +27,7 @@
   /** BIDS =============================================== */
   function bids (__id) {
     console.log($(this).find('h3').css('font_size'));
-    var margin = {top: 12, right: 0, bottom: 20, left: 0},
+    var margin = {top: 12, right: 0, bottom: 12, left: 0},
       width = $('#screen').width()/2.1
        - margin.left - margin.right,
       height = $('#screen').height()/1.2 - margin.top - margin.bottom
@@ -101,7 +101,7 @@
   };
   /** ASKS =============================================== */
   function asks (__id) {
-    var margin = {top: 12, right: 0, bottom: 20, left: 0},
+    var margin = {top: 0, right: 0, bottom: 12, left: 0},
       width = $('#screen').width()/2.1 - margin.left - margin.right,
       height = $('#screen').height()/1.2 - margin.top - margin.bottom
     // set the ranges
