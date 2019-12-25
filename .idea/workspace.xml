@@ -176,9 +176,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="width" value="977" />
-    <option name="height" value="1038" />
+    <option name="x" value="760" />
+    <option name="width" value="974" />
+    <option name="height" value="1167" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -353,9 +353,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.views" />
       <item itemvalue="Python.kriptovalute" />
       <item itemvalue="Python.manage" />
+      <item itemvalue="Python.views" />
       <item itemvalue="Python.vlecenje_vrvi" />
     </list>
     <recent_temporary>
