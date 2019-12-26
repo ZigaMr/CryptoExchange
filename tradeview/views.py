@@ -9,41 +9,15 @@ import datetime as dt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
 
-def get_data():
-    con = db.connect('db.sqlite3')
-    for id, buy, sell in tradeview_pairs.objects.values_list():
-        data = requests.get(r'https://www.bitstamp.net/api/v2/order_book/{}{}'.format(buy.lower(), sell.lower()))
-        data = data.json()
-
-        bids = pd.DataFrame()
-        bids['Volume'] = [i[1] for i in data['bids']]
-        bids['Price'] = [i[0] for i in data['bids']]
-        asks = pd.DataFrame()
-        asks['Price'] = [i[0] for i in data['asks']]
-        asks['Volume'] = [i[1] for i in data['asks']]
-
-        # asks.price = asks.Price.apply(float)
-        # asks.quantity = asks.Volume.apply(float)
-        asks['TimeStamp'] = dt.datetime.utcnow()
-        asks['ID_pair_id'] = id
-        # bids.price = bids.Price.apply(float)
-        # bids.quantity = bids.Volume.apply(float)
-        bids['TimeStamp'] = dt.datetime.utcnow()
-        bids['ID_pair_id'] = id
-
-        asks.to_sql(name='tradeview_tradeview_asks', con=con, if_exists='replace', index=False)
-        bids.to_sql(name='tradeview_tradeview_bids', con=con, if_exists='replace', index=False)
-    return
-
-def get_data_from_db():
+def get_data_from_db(pair_id=1):
     con = db.connect('db.sqlite3')
 
-    bids = pd.read_sql('select Price, Volume, TimeStamp from tradeview_tradeview_bids', con=con)
-    asks = pd.read_sql(' select Price, Volume, TimeStamp from tradeview_tradeview_asks', con=con)
+    bids = pd.read_sql('select Price, Volume, TimeStamp from tradeview_tradeview_bids where ID_pair_id = {}'.format(pair_id), con=con)
+    asks = pd.read_sql('select Price, Volume, TimeStamp from tradeview_tradeview_asks where ID_pair_id = {}'.format(pair_id), con=con)
 
-    if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
-        print('Update orderbook')
-        get_data()
+    # if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
+    #     print('Update orderbook')
+    #     get_data()
     bids_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in bids.itertuples(index=False)][:10]
     asks_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in asks.itertuples(index=False)][:10]
     bidask = dict()
@@ -52,11 +26,18 @@ def get_data_from_db():
     return bidask
 
 def index(request):
-    get_data()
     return render(request, 'index.html', {'orderbook': get_data_from_db()})
 
 def refresh_orderbook(request):
     return render(request, 'refresh_orderbook.html', {'orderbook': get_data_from_db()})
+
+def refresh_table(request):
+    return render(request, 'refresh_table.html',
+                  {'bids': [(i, round(j['price'], 7), round(j['amount'],2), 1)
+                            for i,j in enumerate(get_data_from_db()['bids'][:10])],
+                   'asks': [(i, round(j['price'], 7), round(j['amount'],2), 1)
+                            for i, j in enumerate(get_data_from_db()['asks'][:10])]
+                   })
 
 def signup(request):
     if request.method == 'POST':
@@ -71,3 +52,13 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
+
+def trade_page(request):
+    return render(request, 'trade_page.html',
+                  {'orderbook': get_data_from_db(),
+                   'bids': [(i, round(j['price'], 7), round(j['amount'], 2), 1)
+                            for i, j in enumerate(get_data_from_db()['bids'][:10])],
+                   'asks': [(i, round(j['price'], 7), round(j['amount'], 2), 1)
+                            for i, j in enumerate(get_data_from_db()['asks'][:10])]
+                   })
+
