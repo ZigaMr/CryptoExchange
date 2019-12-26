@@ -124,4 +124,4 @@ STATICFILES_DIRS = [
 
 STATIC_URL = '/static/'
 
-LOGIN_REDIRECT_URL='/tradeview/'
+LOGIN_REDIRECT_URL='/tradeview/trade_page/'
