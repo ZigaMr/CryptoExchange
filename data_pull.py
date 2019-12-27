@@ -12,7 +12,11 @@ def get_data():
     tim = dt.datetime.utcnow()
     asks_final = pd.DataFrame(columns=['Volume', 'Price', 'TimeStamp', 'ID_pair_id'])
     bids_final = pd.DataFrame(columns=['Volume', 'Price', 'TimeStamp', 'ID_pair_id'])
-    for ind, id, buy, sell in pd.read_sql('select * from tradeview_tradeview_pairs', con).itertuples():
+    d = pd.read_sql('select * from tradeview_pairs', con)
+    if d.empty:
+        time.sleep(60)
+        print('No Pairs in table')
+    for ind, id, buy, sell in d.itertuples():
         data = requests.get(r'https://www.bitstamp.net/api/v2/order_book/{}{}'.format(buy.lower(), sell.lower()))
         data = data.json()
 
@@ -26,20 +30,25 @@ def get_data():
         # asks.price = asks.Price.apply(float)
         # asks.quantity = asks.Volume.apply(float)
         asks['TimeStamp'] = tim
-        asks['ID_pair_id'] = id
+        asks['id_pair'] = id
         # bids.price = bids.Price.apply(float)
         # bids.quantity = bids.Volume.apply(float)
         bids['TimeStamp'] = tim
-        bids['ID_pair_id'] = id
+        bids['id_pair'] = id
         print(buy, sell, len(data))
         asks_final = asks_final.append(asks)
         bids_final = bids_final.append(bids)
         time.sleep(int(sys.argv[1]))
-    asks_final.to_sql(name='tradeview_tradeview_asks', con=con, if_exists='replace', index=False)
-    bids_final.to_sql(name='tradeview_tradeview_bids', con=con, if_exists='replace', index=False)
+    asks_final.to_sql(name='tradeview_asks', con=con, if_exists='replace', index=False)
+    bids_final.to_sql(name='tradeview_bids', con=con, if_exists='replace', index=False)
     return
 
 if __name__ == '__main__':
     while True:
         print(sys.argv)
-        get_data()
+        try:
+            get_data()
+        except Exception as e:
+            print(e)
+            print("Can't access Bitstamp API, sleeping 60s")
+            time.sleep(60)

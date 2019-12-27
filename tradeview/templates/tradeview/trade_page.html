@@ -51,9 +51,18 @@
         line-height: 5px;
         table-layout: fixed;
         }
+
     td {
         overflow:hidden;
     }
+    .col-lg-5{
+        top: 20px;
+        }
+
+
+
+
+
 
 
 
@@ -92,36 +101,41 @@
 
 
 <header class="masthead" , id="login">
+
     <div class="container h-100">
         <div class="row h-100">
             <div id="col-lg-7" class="col-lg-7 my-auto">
-                <table class="table table-striped table-dark" style="width: 30px; float: left;">
+                <table class="table table-striped table-dark" style="width: 300px; float: left;">
                     <thead>
                     <tr>
-                        <th scope="col">Bids</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Value</th>
-                        <th scope="col">Coin</th>
+                        <th scope="col" style="width:20%">Type</th>
+                        <th scope="col" style="width:30%">Price</th>
+                        <th scope="col" style="width:30%">Value</th>
+                        <th scope="col" style="width:20%">Coin</th>
                     </tr>
                     </thead>
+                    <caption style="caption-side: top; color: green; text-align: left"><h2>BIDS</h2></caption>
+
                     <tbody>
                     {% for i in bids %}
                     <tr>
-                        <th scope="row">{{i.0}}</th>
-                        <td>{{i.1}}</td>
-                        <td>{{i.2}}</td>
-                        <td>{{i.3}}</td>
+                        <th scope="row" style="width:10%">{{i.0}}</th>
+                        <td style="width:20%">{{i.1}}</td>
+                        <td style="width:20%">{{i.2}}</td>
+                        <td style="width:20%">{{i.3}}</td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
-                <table class="table table-striped table-dark" style="width: 30px; float: right;">
+                <table class="table table-striped table-dark" style="width: 300px; float: right;">
                     <thead>
+                    <caption style="caption-side: top; color: red; text-align: right"><h2>ASKS</h2></caption>
+
                     <tr>
-                        <th scope="col">Asks</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Value</th>
-                        <th scope="col">Coin</th>
+                        <th scope="col" style="width:20%">Type</th>
+                        <th scope="col" style="width:30%">Price</th>
+                        <th scope="col" style="width:30%">Value</th>
+                        <th scope="col" style="width:20%">Coin</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -158,6 +172,35 @@
                 </div>
             </div>
         </div>
+        <form method="POST">
+                {% csrf_token %}
+                <!--                {{ form.as_table }}-->
+                <div class="form-row">
+                    <div class="form-group col-sm-2">
+                        <label for="quantity">Quantity</label>
+                        <input name="quantity" type="text" class="form-control" id="id_quantity" placeholder="0">
+                    </div>
+                    <div class="form-group col-sm-2">
+                        <label for="price">Price</label>
+                        <input name="price" type="text" class="form-control" id="id_price" placeholder="0">
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label for="pair">Select Coin Pair</label>
+                        <select name="pair" class="form-control" id="id_pair">
+                            <option>ETH-BTC</option>
+                            <option>BTC-USD</option>
+                            <option>BTC-EUR</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <button name="BUY" id="id_buy" type="submit" class="btn btn-success">BUY</button>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <button name="SELL" id="id_sell" type="submit" class="btn btn-danger">SELL</button>
+                    </div>
+                </div>
+            </form>
     </div>
 </header>
 
@@ -342,19 +385,51 @@
   bids("bids")
   asks("asks")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 <script>
 $(document).ready(function() {
   $.ajaxSetup({ cache: false }); // This part addresses an IE bug.  without it, IE will only load the first number and will never refresh
   console.log("Updating");
-  var my_refresh = setInterval(function() {
-    $('#col-lg-7').load('/tradeview/refresh_table/');
-  }, 1000);
-  var my_refresh_table = setInterval(function() {
-    $('#screen').load('/tradeview/refresh_orderbook/');
-  }, 1000);
+ // var my_refresh = setInterval(function() {
+ //   $('#col-lg-7').load('/tradeview/refresh_table/');
+ // }, 5000);
+ // var my_refresh_table = setInterval(function() {
+  //  $('#screen').load('/tradeview/refresh_orderbook/');
+  //}, 5000);
 
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </script>
