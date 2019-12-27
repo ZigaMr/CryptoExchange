@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tradeview.apps.TradeViewConfig',
-    # 'tradeview',
+    # 'tradeview.apps.TradeViewConfig',
+    'tradeview',
     # 'background_task',
 ]
 
