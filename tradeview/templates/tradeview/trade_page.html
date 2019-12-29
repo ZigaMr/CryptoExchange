@@ -31,39 +31,33 @@
     <!-- Custom styles for this template -->
     <link href="/static/css/new-age.min.css" rel="stylesheet">
     <style>
-    .bar-bids {
-      fill: green; }
-    .bar-asks {
-      fill: red; }
-    .depth-chart {
-      display: inline-block;
-      position: relative;
-      left: 10px;
-      top: 10px;
-      right: 10px;}
-    .wrapper-align-center{
-      position: relative;
-      top: 350px;}
-    .inner{
+        .bar-bids {
+        fill: green; }
+        .bar-asks {
+        fill: red; }
+        .depth-chart {
+        display: inline-block;
+        position: relative;
+        left: 10px;
+        top: 10px;
+        right: 10px;}
+        .wrapper-align-center{
+        position: relative;
+        top: 350px;}
+        .inner{
         position: relative;
         left: 0px;}
-    .table {
+        .table {
         line-height: 5px;
         table-layout: fixed;
         }
 
-    td {
+        td {
         overflow:hidden;
-    }
-    .col-lg-5{
+        }
+        .col-lg-5{
         top: 20px;
         }
-
-
-
-
-
-
 
 
     </style>
@@ -76,26 +70,35 @@
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
-        <a class="navbar-brand js-scroll-trigger" href="#page-top">Back to top</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
-                data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
-                aria-label="Toggle navigation">
-            Menu
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link js-scroll-trigger" href="#login">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link js-scroll-trigger" href="#register">Register</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link js-scroll-trigger" href="#about">About</a>
-                </li>
-            </ul>
+        <div class="column"><a class="navbar-brand js-scroll-trigger" href="#page-top">Back to top</a>
         </div>
+        <div class="column">
+            <h3 class="navbar-brand js-scroll-trigger">Hello user: {{ username }}</h3>
+        </div>
+        <div class="column">
+
+            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+                    data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                Menu
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="/login/">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="/tradeview/signup/">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#about">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
     </div>
 </nav>
 
@@ -104,51 +107,90 @@
 
     <div class="container h-100">
         <div class="row h-100">
-            <div id="col-lg-7" class="col-lg-7 my-auto">
-                <table class="table table-striped table-dark" style="width: 300px; float: left;">
-                    <thead>
-                    <tr>
-                        <th scope="col" style="width:20%">Type</th>
-                        <th scope="col" style="width:30%">Price</th>
-                        <th scope="col" style="width:30%">Value</th>
-                        <th scope="col" style="width:20%">Coin</th>
-                    </tr>
-                    </thead>
-                    <caption style="caption-side: top; color: green; text-align: left"><h2>BIDS</h2></caption>
+            <div class="col-lg-7 my-auto">
+                <div class="row" id="orderbk">
+                    <div class="col">
+                        <table class="table table-striped table-dark" style="width: 300px; float: left;">
+                            <thead>
+                            <tr>
+                                <th scope="col" style="width:20%">Type</th>
+                                <th scope="col" style="width:30%">Price</th>
+                                <th scope="col" style="width:30%">Value</th>
+                                <th scope="col" style="width:20%">Coin</th>
+                            </tr>
+                            </thead>
+                            <caption style="caption-side: top; color: green; text-align: left"><h2>BIDS</h2></caption>
 
-                    <tbody>
-                    {% for i in bids %}
-                    <tr>
-                        <th scope="row" style="width:10%">{{i.0}}</th>
-                        <td style="width:20%">{{i.1}}</td>
-                        <td style="width:20%">{{i.2}}</td>
-                        <td style="width:20%">{{i.3}}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <table class="table table-striped table-dark" style="width: 300px; float: right;">
-                    <thead>
-                    <caption style="caption-side: top; color: red; text-align: right"><h2>ASKS</h2></caption>
+                            <tbody>
+                            {% for i in bids %}
+                            <tr>
+                                <th scope="row" style="width:10%">{{i.0}}</th>
+                                <td style="width:20%">{{i.1}}</td>
+                                <td style="width:20%">{{i.2}}</td>
+                                <td style="width:20%">{{i.3}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col">
+                        <table class="table table-striped table-dark" style="width: 300px; float: right;">
+                            <thead>
+                            <caption style="caption-side: top; color: red; text-align: right"><h2>ASKS</h2></caption>
 
-                    <tr>
-                        <th scope="col" style="width:20%">Type</th>
-                        <th scope="col" style="width:30%">Price</th>
-                        <th scope="col" style="width:30%">Value</th>
-                        <th scope="col" style="width:20%">Coin</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for i in asks %}
-                    <tr>
-                        <th scope="row">{{i.0}}</th>
-                        <td>{{i.1}}</td>
-                        <td>{{i.2}}</td>
-                        <td>{{i.3}}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                            <tr>
+                                <th scope="col" style="width:20%">Type</th>
+                                <th scope="col" style="width:30%">Price</th>
+                                <th scope="col" style="width:30%">Value</th>
+                                <th scope="col" style="width:20%">Coin</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for i in asks %}
+                            <tr>
+                                <th scope="row">{{i.0}}</th>
+                                <td>{{i.1}}</td>
+                                <td>{{i.2}}</td>
+                                <td>{{i.3}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <!--                {{ form.as_table }}-->
+                        <div class="form-row">
+                            <div class="form-group col-sm-2">
+                                <label for="quantity">Quantity</label>
+                                <input name="quantity" type="text" class="form-control" id="id_quantity"
+                                       placeholder="0">
+                            </div>
+                            <div class="form-group col-sm-2">
+                                <label for="price">Price</label>
+                                <input name="price" type="text" class="form-control" id="id_price" placeholder="0">
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="pair">Select Coin Pair</label>
+                                <select name="pair" class="form-control" id="id_pair">
+                                    <option>ETH-BTC</option>
+                                    <option>BTC-USD</option>
+                                    <option>BTC-EUR</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <button name="BUY" id="id_buy" type="submit" class="btn btn-success">BUY</button>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <button name="SELL" id="id_sell" type="submit" class="btn btn-danger">SELL</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
             </div>
             <div class="col-lg-5 my-auto">
                 <div class="device-container">
@@ -162,52 +204,26 @@
                                 <div id="asks" class="depth-chart">
                                     <h3>Asks</h3>
                                 </div>
-                                <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
                             </div>
-                            <div class="button">
-                                <!-- You can hook the "home button" to some JavaScript events or just remove it -->
+
+                            <div class="button" id="change_pair">
+                                <!--<script type="text/javascript">-->
+                                    <!---->
+
+                                <!--</script>-->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <form method="POST">
-                {% csrf_token %}
-                <!--                {{ form.as_table }}-->
-                <div class="form-row">
-                    <div class="form-group col-sm-2">
-                        <label for="quantity">Quantity</label>
-                        <input name="quantity" type="text" class="form-control" id="id_quantity" placeholder="0">
-                    </div>
-                    <div class="form-group col-sm-2">
-                        <label for="price">Price</label>
-                        <input name="price" type="text" class="form-control" id="id_price" placeholder="0">
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label for="pair">Select Coin Pair</label>
-                        <select name="pair" class="form-control" id="id_pair">
-                            <option>ETH-BTC</option>
-                            <option>BTC-USD</option>
-                            <option>BTC-EUR</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-2">
-                        <button name="BUY" id="id_buy" type="submit" class="btn btn-success">BUY</button>
-                    </div>
-                    <div class="form-group col-md-2">
-                        <button name="SELL" id="id_sell" type="submit" class="btn btn-danger">SELL</button>
-                    </div>
-                </div>
-            </form>
     </div>
 </header>
 
 
 <footer>
     <div class="container">
-        <p>&copy; Your Website 2019. All Rights Reserved.</p>
+        <p>&copy; CryptoExchange 2019. All Rights Reserved.</p>
         <ul class="list-inline">
             <li class="list-inline-item">
                 <a href="#">Privacy</a>
@@ -386,50 +402,21 @@
   asks("asks")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 <script>
 $(document).ready(function() {
   $.ajaxSetup({ cache: false }); // This part addresses an IE bug.  without it, IE will only load the first number and will never refresh
   console.log("Updating");
- // var my_refresh = setInterval(function() {
- //   $('#col-lg-7').load('/tradeview/refresh_table/');
- // }, 5000);
- // var my_refresh_table = setInterval(function() {
-  //  $('#screen').load('/tradeview/refresh_orderbook/');
-  //}, 5000);
+  var my_refresh = setInterval(function() {
+    $('#orderbk').load('/tradeview/refresh_table/');
+  }, 1000);
+  var my_refresh_table = setInterval(function() {
+    $('#screen').load('/tradeview/refresh_orderbook/');
+  }, 1000);
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+$( "#change_pair" ).click(function() {
+  $.get('update_session/', function(data) {console.log(data)});
+});
 
 </script>

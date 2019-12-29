@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 import sqlite3 as db
-import datetime as dt
+import traceback
 import time
 import sys
 import datetime as dt
@@ -27,12 +27,9 @@ def get_data():
         asks['Price'] = [i[0] for i in data['asks']]
         asks['Volume'] = [i[1] for i in data['asks']]
 
-        # asks.price = asks.Price.apply(float)
-        # asks.quantity = asks.Volume.apply(float)
         asks['TimeStamp'] = tim
         asks['id_pair'] = id
-        # bids.price = bids.Price.apply(float)
-        # bids.quantity = bids.Volume.apply(float)
+
         bids['TimeStamp'] = tim
         bids['id_pair'] = id
         print(buy, sell, len(data))
@@ -49,6 +46,6 @@ if __name__ == '__main__':
         try:
             get_data()
         except Exception as e:
-            print(e)
+            print(traceback.print_exc())
             print("Can't access Bitstamp API, sleeping 60s")
             time.sleep(60)

@@ -48,3 +48,4 @@ class LocalBids(models.Model):
     timestamp = models.TextField()
     volume = models.FloatField()
     price = models.FloatField()
+    buy = models.BooleanField(default=True)
