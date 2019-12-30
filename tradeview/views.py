@@ -10,12 +10,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
 from .forms import UserBids
 from django.http import HttpResponseRedirect, HttpResponseNotAllowed
-
+import time
 
 def get_data_from_db(pair_id=2):
     con = db.connect('db.sqlite3')
 
-    bids = pd.read_sql("""select * from
+    for i in range(4):
+        bids = pd.read_sql("""select * from
                         (
                         select Price price, Volume volume, TimeStamp timestamp,'API' as username
                         from tradeview_bids where id_pair = {}
@@ -25,7 +26,11 @@ def get_data_from_db(pair_id=2):
                         where pair_id = {} and buy = 1
                         )
                         order by cast(price as decimal) desc""".format(pair_id, pair_id), con=con)
-    asks = pd.read_sql("""select * from
+        if len(bids) >= 10:
+            break
+        time.sleep(0.01)
+    for i in range(4):
+        asks = pd.read_sql("""select * from
                             (
                             select Price price, Volume volume, TimeStamp timestamp,'API' as username
                             from tradeview_asks where id_pair = {}
@@ -35,12 +40,15 @@ def get_data_from_db(pair_id=2):
                             where pair_id = {} and buy = 0
                             )
                             order by cast(price as decimal)""".format(pair_id, pair_id), con=con)
+        if len(asks) >= 10:
+            break
+        time.sleep(0.01)
 
     # if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
     #     print('Update orderbook')
     #     get_data()
-    bids_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3]} for x in bids.itertuples(index=False)][:10]
-    asks_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3]} for x in asks.itertuples(index=False)][:10]
+    bids_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in bids.itertuples(index=False)][:10]
+    asks_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in asks.itertuples(index=False)][:10]
     bidask = dict()
     bidask['asks'] = asks_dict
     bidask['bids'] = bids_dict
@@ -56,9 +64,9 @@ def update_session(request):
     print(request.session['coin_pair'])
     return render(request, 'trade_page.html',
                   {'orderbook': get_data_from_db(),
-                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), 1)
+                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), 1)
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                    'form':form,
                    'username': request.user.username
@@ -73,9 +81,9 @@ def refresh_orderbook(request):
 
 def refresh_table(request):
     return render(request, 'refresh_table.html',
-                  {'bids': [(j['username'], round(j['price'], 7), round(j['amount'],2), 1)
+                  {'bids': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'],2), 1)
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])]
                    })
 
@@ -112,9 +120,9 @@ def trade_page(request):
     print(request.POST)
     return render(request, 'trade_page.html',
                   {'orderbook': get_data_from_db(),
-                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), 1)
+                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), 1)
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                    'form':form,
                    'username': request.user.username
