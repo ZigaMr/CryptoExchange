@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template import loader, Context
 import requests
 import pandas as pd
-from .models import LocalBids, Pairs, Bots
+from .models import LocalBids, Pairs, Bots, Trades
 import sqlite3 as db
 import datetime as dt
 from django.contrib.auth.forms import UserCreationForm
@@ -54,12 +54,35 @@ def get_data_from_db(pair_id=2):
     bidask['bids'] = bids_dict
     return bidask
 
+def portfolio_helper(df):
+    if df[df.buy].volume.sum() >= df[~df.buy].volume.sum():
+        vol = df[~df.buy].volume.sum()
+        sell_p = df[~df.buy].profit.sum()
+        x = df[df.buy]
+        x['cum_vol'] = x.volume.cumsum()
+        realized = x[x.cum_vol <= vol]
+        buy_p = realized.profit.sum()
+        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        buy_p += p
+        unrealized = x[x.cum_vol > vol].profit.sum() - p
+    else:
+        vol = df[df.buy].volume.sum()
+        buy_p = df[df.buy].profit.sum()
+        x = df[~df.buy]
+        x['cum_vol'] = x.volume.cumsum()
+        realized = x[x.cum_vol <= vol]
+        sell_p = realized.profit.sum()
+        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        sell_p += p
+        unrealized = x[x.cum_vol > vol].profit.sum() - p
+
+    return [sell_p+buy_p, unrealized, df.volume.sum()]
 
 def update_session(request):
     # if not request.is_ajax() or not request.method=='POST':
     #     return HttpResponseNotAllowed(['POST'])
 
-    request.session['coin_pair'] = max((request.session['coin_pair'] + 1) % (Pairs.objects.count(                                                                                                                            ) + 1),1)
+    request.session['coin_pair'] = max((request.session['coin_pair'] + 1) % (Pairs.objects.count() + 1),1)
     form=UserBids()
     print(request.session['coin_pair'])
     return render(request, 'trade_page.html',
@@ -69,7 +92,8 @@ def update_session(request):
                    'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                    'form':form,
-                   'username': request.user.username
+                   'username': request.user.username,
+                   'pairs': [i[1]+'-'+i[2] for i in Pairs.objects.values_list()]
                    })
 
 def index(request):
@@ -117,6 +141,12 @@ def trade_page(request):
         d.save()
     else:
         form = UserBids()
+
+    df = pd.DataFrame(list(Trades.objects.filter(user=request.user.id).all().values()))
+    df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: -1 if x== 0 else 1))
+
+    d = df.groupby('pair_id').apply(portfolio_helper)
+    portfolio = [[i.pair_id]+[round(x,2) for x in i[0]] for j, i in d.reset_index().iterrows()]
     print(request.POST)
     return render(request, 'trade_page.html',
                   {'orderbook': get_data_from_db(),
@@ -125,7 +155,9 @@ def trade_page(request):
                    'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                    'form':form,
-                   'username': request.user.username
+                   'username': request.user.username,
+                   'pairs': [i[1]+'-'+i[2] for i in Pairs.objects.values_list()],
+                   'portfolio': portfolio
                    })
 
 

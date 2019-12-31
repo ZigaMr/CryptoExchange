@@ -41,6 +41,7 @@ class Trades(models.Model):
     timestamp = models.TextField()
     volume = models.FloatField()
     price = models.FloatField()
+    buy = models.BooleanField(default=True)
 
 class LocalBids(models.Model):
     pair = models.ForeignKey(Pairs, on_delete=models.DO_NOTHING)

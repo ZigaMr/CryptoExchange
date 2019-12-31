@@ -54,19 +54,20 @@ def get_data(orders_local):
                     print('Deleting buy order: ', order.id)
                     pr = asks[asks.cum_vol <= 0].Volume.sum()
                     tr = asks[asks.cum_vol <= 0][['TimeStamp', 'Volume', 'Price', 'id_pair']]
-                    asks = asks[asks.cum_vol > 0]
+                    asks = asks[asks.cum_vol > 0].reset_index(drop=True)
                     asks.Volume.iloc[0] -= (order.volume - pr)
-                    tr = tr.append(asks.loc[:1, :][['TimeStamp', 'Volume', 'Price', 'id_pair']])
+                    tr = tr.append(asks.loc[:0, :][['TimeStamp', 'Volume', 'Price', 'id_pair']])
                     tr.Volume.iloc[-1] = (order.volume - pr)
                 else:
                     modify_orders[order.id] = order.volume - asks[asks.Price.astype(float) <= order.price].Volume.sum()
                     print('Modifying buy order: ', order.id)
                     tr = asks[asks.cum_vol <= 0][['TimeStamp', 'Volume', 'Price', 'id_pair']]
-                    asks = asks[asks.cum_vol > 0]
+                    asks = asks[asks.cum_vol > 0].reset_index(drop=True)
 
 
                 tr['user'] = order.user
-                trades = trades.append(tr[['user', 'TimeStamp', 'Volume', 'Price', 'id_pair']])
+                tr['buy'] = 1
+                trades = trades.append(tr[['user', 'TimeStamp', 'Volume', 'Price', 'id_pair', 'buy']])
                 asks['cum_vol'] = asks.Volume.astype(float).cumsum()
 
             elif order.buy == 0 and order.price <= bids.Price.astype(float).max():
@@ -76,18 +77,19 @@ def get_data(orders_local):
                     print('Deleting ask order: ', order.id)
                     pr = bids[bids.cum_vol <= 0].Volume.sum()
                     tr = bids[bids.cum_vol <= 0][['TimeStamp', 'Volume', 'Price', 'id_pair']]
-                    bids = bids[bids.cum_vol > 0]
+                    bids = bids[bids.cum_vol > 0].reset_index(drop=True)
                     bids.Volume.iloc[0] -= (order.volume - pr)
-                    tr = tr.append(bids.loc[:1, :][['TimeStamp', 'Volume', 'Price', 'id_pair']])
+                    tr = tr.append(bids.loc[:0, :][['TimeStamp', 'Volume', 'Price', 'id_pair']])
                     tr.Volume.iloc[-1] = (order.volume - pr)
                 else:
                     modify_orders[order.id] = order.volume - bids[bids.Price.astype(float) >= order.price].Volume.sum()
                     print('Modifying ask order: ', order.id)
                     tr = asks[asks.cum_vol <= 0][['TimeStamp', 'Volume', 'Price', 'id_pair']]
-                    bids = bids[bids.cum_vol > 0]
+                    bids = bids[bids.cum_vol > 0].reset_index(drop=True)
 
                 tr['user'] = order.user
-                trades = trades.append(tr[['user', 'TimeStamp', 'Volume', 'Price', 'id_pair']])
+                tr['buy'] = 0
+                trades = trades.append(tr[['user', 'TimeStamp', 'Volume', 'Price', 'id_pair', 'buy']])
                 bids['cum_vol'] = bids.Volume.astype(float).cumsum()
 
         asks = asks[asks.cum_vol > 0].drop('cum_vol', 1)
