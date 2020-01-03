@@ -3,43 +3,112 @@ from django.http import HttpResponse
 from django.template import loader, Context
 import requests
 import pandas as pd
-from .models import LocalBids, Pairs, Bots
+from .models import LocalBids, Pairs, Bots, Trades
 import sqlite3 as db
 import datetime as dt
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
 from .forms import UserBids
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed
+import time
 
-
-def get_data_from_db(pair_id=1):
+def get_data_from_db(pair_id=2):
     con = db.connect('db.sqlite3')
 
-    bids = pd.read_sql('select Price, Volume, TimeStamp from tradeview_bids where id_pair = {}'.format(pair_id), con=con)
-    asks = pd.read_sql('select Price, Volume, TimeStamp from tradeview_asks where id_pair = {}'.format(pair_id), con=con)
+    for i in range(4):
+        bids = pd.read_sql("""select * from
+                        (
+                        select Price price, Volume volume, TimeStamp timestamp,'API' as username
+                        from tradeview_bids where id_pair = {}
+                        union
+                        select price, volume, timestamp, username
+                        from (select a.*, b.username from tradeview_localbids as a join auth_user as b on a.user = b.id)
+                        where pair_id = {} and buy = 1
+                        )
+                        order by cast(price as decimal) desc""".format(pair_id, pair_id), con=con)
+        if len(bids) >= 10:
+            break
+        time.sleep(0.01)
+    for i in range(4):
+        asks = pd.read_sql("""select * from
+                            (
+                            select Price price, Volume volume, TimeStamp timestamp,'API' as username
+                            from tradeview_asks where id_pair = {}
+                            union
+                            select price, volume, timestamp, username
+                            from (select a.*, b.username from tradeview_localbids as a join auth_user as b on a.user = b.id)
+                            where pair_id = {} and buy = 0
+                            )
+                            order by cast(price as decimal)""".format(pair_id, pair_id), con=con)
+        if len(asks) >= 10:
+            break
+        time.sleep(0.01)
 
     # if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
     #     print('Update orderbook')
     #     get_data()
-    bids_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in bids.itertuples(index=False)][:10]
-    asks_dict = [{'price': float(x[0]), 'amount':float(x[1])} for x in asks.itertuples(index=False)][:10]
+    bids_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in bids.itertuples(index=False)][:10]
+    asks_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in asks.itertuples(index=False)][:10]
     bidask = dict()
     bidask['asks'] = asks_dict
     bidask['bids'] = bids_dict
     return bidask
 
+def portfolio_helper(df):
+    if df[df.buy].volume.sum() >= df[~df.buy].volume.sum():
+        vol = df[~df.buy].volume.sum()
+        sell_p = df[~df.buy].profit.sum()
+        x = df[df.buy]
+        x['cum_vol'] = x.volume.cumsum()
+        realized = x[x.cum_vol <= vol]
+        buy_p = realized.profit.sum()
+        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        buy_p += p
+        unrealized = x[x.cum_vol > vol].profit.sum() - p
+    else:
+        vol = df[df.buy].volume.sum()
+        buy_p = df[df.buy].profit.sum()
+        x = df[~df.buy]
+        x['cum_vol'] = x.volume.cumsum()
+        realized = x[x.cum_vol <= vol]
+        sell_p = realized.profit.sum()
+        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        sell_p += p
+        unrealized = x[x.cum_vol > vol].profit.sum() - p
+
+    return [sell_p+buy_p, unrealized, df.volume.sum()]
+
+def update_session(request):
+    # if not request.is_ajax() or not request.method=='POST':
+    #     return HttpResponseNotAllowed(['POST'])
+
+    request.session['coin_pair'] = max((request.session['coin_pair'] + 1) % (Pairs.objects.count() + 1),1)
+    form=UserBids()
+    print(request.session['coin_pair'])
+    return render(request, 'trade_page.html',
+                  {'orderbook': get_data_from_db(),
+                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
+                   'form':form,
+                   'username': request.user.username,
+                   'pairs': [i[1]+'-'+i[2] for i in Pairs.objects.values_list()]
+                   })
+
 def index(request):
-    return render(request, 'index.html', {'orderbook': get_data_from_db()})
+    request.session['coin_pair'] = 1
+    return render(request, 'index.html', {'orderbook': get_data_from_db(request.session['coin_pair'])})
 
 def refresh_orderbook(request):
-    return render(request, 'refresh_orderbook.html', {'orderbook': get_data_from_db()})
+    return render(request, 'refresh_orderbook.html', {'orderbook': get_data_from_db(request.session['coin_pair'])})
 
 def refresh_table(request):
     return render(request, 'refresh_table.html',
-                  {'bids': [('API', round(j['price'], 7), round(j['amount'],2), 1)
-                            for i,j in enumerate(get_data_from_db()['bids'][:10])],
-                   'asks': [('API', round(j['price'], 7), round(j['amount'],2), 1)
-                            for i, j in enumerate(get_data_from_db()['asks'][:10])]
+                  {'bids': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])]
                    })
 
 def signup(request):
@@ -51,15 +120,13 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('index')
+            return redirect('trade_page')
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
 def trade_page(request):
-    # if this is a POST request we need to process the form data
     if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
         form = UserBids(request.POST)
         quantity = form.data['quantity']
         price = form.data['price']
@@ -68,29 +135,29 @@ def trade_page(request):
 
         d = LocalBids(user=int(request.user.id), timestamp=str(dt.datetime.utcnow()),
                       volume=float(quantity), price=float(price),
-                      pair=Pairs.objects.get(buy_pair=pair.split('-')[0], sell_pair=pair.split('-')[1])
+                      pair=Pairs.objects.get(buy_pair=pair.split('-')[0], sell_pair=pair.split('-')[1]),
+                      buy=buy
                       )
         d.save()
-        # check whether it's valid:
-        # if form.is_valid():
-        #     # process the data in form.cleaned_data as required
-        #     # ...
-        #     # redirect to a new URL:
-        #     return HttpResponseRedirect('/thanks/')
-
-    # if a GET (or any other method) we'll create a blank form
     else:
         form = UserBids()
+
+    df = pd.DataFrame(list(Trades.objects.filter(user=request.user.id).all().values()))
+    df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: -1 if x== 0 else 1))
+
+    d = df.groupby('pair_id').apply(portfolio_helper)
+    portfolio = [[i.pair_id]+[round(x,2) for x in i[0]] for j, i in d.reset_index().iterrows()]
     print(request.POST)
-    d = Bots(2, True, 3, 4)
-    d.save()
     return render(request, 'trade_page.html',
                   {'orderbook': get_data_from_db(),
-                   'bids': [('API', round(j['price'], 7), round(j['amount'], 2), 1)
-                            for i, j in enumerate(get_data_from_db()['bids'][:10])],
-                   'asks': [('API', round(j['price'], 7), round(j['amount'], 2), 1)
-                            for i, j in enumerate(get_data_from_db()['asks'][:10])],
-                   'form':form
+                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
+                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
+                   'form':form,
+                   'username': request.user.username,
+                   'pairs': [i[1]+'-'+i[2] for i in Pairs.objects.values_list()],
+                   'portfolio': portfolio
                    })
 
 

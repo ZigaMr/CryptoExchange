@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+  <!-- Bootstrap core CSS -->
+  <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/vendor/simple-line-icons/css/simple-line-icons.css">
+
+  <!-- Plugin CSS -->
+  <link rel="stylesheet" href="/static/device-mockups/device-mockups.min.css">
+
+  <!-- Custom styles for this template -->
+  <link href="/static/css/new-age.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+  <header class="masthead", id="login">
+{% block content %}
+  <h2>Sign up</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Sign up</button>
+  </form>
+{% endblock %}
+      </header>
+</body>
