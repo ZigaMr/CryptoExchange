@@ -42,6 +42,8 @@ class Trades(models.Model):
     volume = models.FloatField()
     price = models.FloatField()
     buy = models.BooleanField(default=True)
+    # buyer = models.CharField(default="2", max_length=100)
+    # seller = models.CharField(default="API", max_length=100)
 
 class LocalBids(models.Model):
     pair = models.ForeignKey(Pairs, on_delete=models.DO_NOTHING)

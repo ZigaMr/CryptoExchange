@@ -16,14 +16,14 @@ import math
 #Helper functions
 
 #Round to nearest non zero decimal
-def myround(n):
+def myround(n, n_places=2):
     if n == 0:
         return 0
     sgn = -1 if n < 0 else 1
     scale = int(-math.floor(math.log10(abs(n))))
     if scale <= 0:
         scale = 1
-    factor = 100**scale
+    factor = 10**(scale+n_places)
     return sgn*math.floor(abs(n)*factor)/factor
 
 def get_data_from_db(pair_id=2):
@@ -74,8 +74,8 @@ def portfolio_helper(df):
         x['cum_vol'] = x.volume.cumsum()
         realized = x[x.cum_vol <= vol]
         buy_p = realized.profit.sum()
-        if vol != realized.volume.sum():
-            p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        if vol != round(realized.volume.sum(),10):
+            p = (x[x.cum_vol > vol].cum_vol.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
             buy_p += p
         else:
             p = 0
@@ -88,8 +88,8 @@ def portfolio_helper(df):
         x['cum_vol'] = x.volume.cumsum()
         realized = x[x.cum_vol <= vol]
         sell_p = realized.profit.sum()
-        if vol != realized.volume.sum():
-            p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+        if vol != round(realized.volume.sum(),10):
+            p = (x[x.cum_vol > vol].cum_vol.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
             sell_p += p
         else:
             p = 0
@@ -107,9 +107,9 @@ def update_session(request):
     print(request.session['coin_pair'])
     return render(request, 'trade_page.html',
                   {'orderbook': get_data_from_db(),
-                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                   'bids': [(j['username'], myround(j['price'], 3), myround(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                   'asks': [(j['username'], myround(j['price'], 3), myround(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                    'form':form,
                    'username': request.user.username,
@@ -125,9 +125,9 @@ def refresh_orderbook(request):
 
 def refresh_table(request):
     return render(request, 'refresh_table.html',
-                  {'bids': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                  {'bids': [(j['username'], myround(j['price'], 3), myround(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                   'asks': [(j['username'], myround(j['price'], 3), myround(j['amount'],2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                             for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])]
                    })
 
@@ -149,9 +149,10 @@ def trade_page(request):
 
     df = pd.DataFrame(list(Trades.objects.filter(user=request.user.id).all().values()))
     if not df.empty:
-        df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: -1 if x== 0 else 1))
+        df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: 1 if x == 0 else -1))
         d = df.groupby('pair_id').apply(portfolio_helper)
-        portfolio = [['_'.join(Pairs.objects.filter(id_pair=i.pair_id).values_list()[0][1:])]+[myround(x) for x in i[0]] for j, i in d.reset_index().iterrows()]
+        portfolio = [['_'.join(Pairs.objects.filter(id_pair=i.pair_id).values_list()[0][1:])]+[myround(x) for x in i[0]]
+                     for j, i in d.reset_index().iterrows()]
     else:
         portfolio = []
 
@@ -175,10 +176,10 @@ def trade_page(request):
         form = UserBids()
         return render(request, 'trade_page.html',
                       {'orderbook': get_data_from_db(),
-                       'bids': [(j['username'], round(j['price'], 5), round(j['amount'], 2),
+                       'bids': [(j['username'], myround(j['price'], 3), myround(j['amount'], 3),
                                  Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
                                 for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                       'asks': [(j['username'], round(j['price'], 5), round(j['amount'], 2),
+                       'asks': [(j['username'], myround(j['price'], 3), myround(j['amount'], 3),
                                  Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
                                 for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
                        'form': form,
