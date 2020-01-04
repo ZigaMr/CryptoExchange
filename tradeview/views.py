@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse
 from django.template import loader, Context
 import requests
@@ -11,6 +11,20 @@ from django.contrib.auth import login, authenticate
 from .forms import UserBids
 from django.http import HttpResponseRedirect, HttpResponseNotAllowed
 import time
+import math
+
+#Helper functions
+
+#Round to nearest non zero decimal
+def myround(n):
+    if n == 0:
+        return 0
+    sgn = -1 if n < 0 else 1
+    scale = int(-math.floor(math.log10(abs(n))))
+    if scale <= 0:
+        scale = 1
+    factor = 100**scale
+    return sgn*math.floor(abs(n)*factor)/factor
 
 def get_data_from_db(pair_id=2):
     con = db.connect('db.sqlite3')
@@ -44,9 +58,7 @@ def get_data_from_db(pair_id=2):
             break
         time.sleep(0.01)
 
-    # if pd.to_datetime(bids['TimeStamp']).max() < dt.datetime.utcnow() - dt.timedelta(seconds=10):
-    #     print('Update orderbook')
-    #     get_data()
+
     bids_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in bids.itertuples(index=False)][:10]
     asks_dict = [{'price': float(x[0]), 'amount':float(x[1]), 'username':x[3], 'timestamp':x[2]} for x in asks.itertuples(index=False)][:10]
     bidask = dict()
@@ -62,9 +74,13 @@ def portfolio_helper(df):
         x['cum_vol'] = x.volume.cumsum()
         realized = x[x.cum_vol <= vol]
         buy_p = realized.profit.sum()
-        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
-        buy_p += p
+        if vol != realized.volume.sum():
+            p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+            buy_p += p
+        else:
+            p = 0
         unrealized = x[x.cum_vol > vol].profit.sum() - p
+        un_vol = df[df.buy].volume.sum() - vol
     else:
         vol = df[df.buy].volume.sum()
         buy_p = df[df.buy].profit.sum()
@@ -72,11 +88,15 @@ def portfolio_helper(df):
         x['cum_vol'] = x.volume.cumsum()
         realized = x[x.cum_vol <= vol]
         sell_p = realized.profit.sum()
-        p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
-        sell_p += p
+        if vol != realized.volume.sum():
+            p = (x[x.cum_vol > vol].volume.iloc[0] - vol) * x[x.cum_vol > vol].price.iloc[0]
+            sell_p += p
+        else:
+            p = 0
         unrealized = x[x.cum_vol > vol].profit.sum() - p
+        un_vol = df[~df.buy].volume.sum() - vol
 
-    return [sell_p+buy_p, unrealized, df.volume.sum()]
+    return [sell_p+buy_p, unrealized, vol, un_vol, df.volume.sum()]
 
 def update_session(request):
     # if not request.is_ajax() or not request.method=='POST':
@@ -126,10 +146,19 @@ def signup(request):
     return render(request, 'signup.html', {'form': form})
 
 def trade_page(request):
+
+    df = pd.DataFrame(list(Trades.objects.filter(user=request.user.id).all().values()))
+    if not df.empty:
+        df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: -1 if x== 0 else 1))
+        d = df.groupby('pair_id').apply(portfolio_helper)
+        portfolio = [['_'.join(Pairs.objects.filter(id_pair=i.pair_id).values_list()[0][1:])]+[myround(x) for x in i[0]] for j, i in d.reset_index().iterrows()]
+    else:
+        portfolio = []
+
     if request.method == 'POST':
         form = UserBids(request.POST)
         quantity = form.data['quantity']
-        price = form.data['price']
+        price = 0 if form.data['price'] == '' else form.data['price']
         pair = form.data['pair']
         buy = 'BUY' in form.data.keys()
 
@@ -139,25 +168,25 @@ def trade_page(request):
                       buy=buy
                       )
         d.save()
+        print(request.POST)
+        return HttpResponseRedirect('/tradeview/trade_page/')
+
     else:
         form = UserBids()
+        return render(request, 'trade_page.html',
+                      {'orderbook': get_data_from_db(),
+                       'bids': [(j['username'], round(j['price'], 5), round(j['amount'], 2),
+                                 Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
+                                for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
+                       'asks': [(j['username'], round(j['price'], 5), round(j['amount'], 2),
+                                 Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
+                                for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
+                       'form': form,
+                       'username': request.user.username,
+                       'pairs': [i[1] + '-' + i[2] for i in Pairs.objects.values_list()],
+                       'portfolio': portfolio
+                       })
 
-    df = pd.DataFrame(list(Trades.objects.filter(user=request.user.id).all().values()))
-    df['profit'] = df.volume*df.price*(df.buy.apply(lambda x: -1 if x== 0 else 1))
 
-    d = df.groupby('pair_id').apply(portfolio_helper)
-    portfolio = [[i.pair_id]+[round(x,2) for x in i[0]] for j, i in d.reset_index().iterrows()]
-    print(request.POST)
-    return render(request, 'trade_page.html',
-                  {'orderbook': get_data_from_db(),
-                   'bids': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).buy_pair)
-                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['bids'][:10])],
-                   'asks': [(j['username'], round(j['price'], 7), round(j['amount'], 2), Pairs.objects.get(id_pair=request.session['coin_pair']).sell_pair)
-                            for i, j in enumerate(get_data_from_db(request.session['coin_pair'])['asks'][:10])],
-                   'form':form,
-                   'username': request.user.username,
-                   'pairs': [i[1]+'-'+i[2] for i in Pairs.objects.values_list()],
-                   'portfolio': portfolio
-                   })
 
 
