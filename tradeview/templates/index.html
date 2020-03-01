@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="/static/js2/js/jquery.min.js"></script>
+  <script src="/static/js2/js/skel.min.js"></script>
+  <script src="/static/js2/js/util.js"></script>
+<!--  <script src="/static/js2/js/main.js"></script>-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lodash@4.17.4/lodash.min.js"></script>
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <style>
+    .bar-bids {
+      fill: green; }
+    .bar-asks {
+      fill: red; }
+    .depth-chart {
+      display: inline-block;
+      position: relative;
+      left: 10px;
+      top: 10px;
+      right: 10px;}
+    .wrapper-align-center{
+      position: relative;
+
+      top: 350px;}
+    .inner{
+        position: relative;
+        left: 0px;}
+
+  </style>
+
+
+  <title>New Age - Start Bootstrap Theme</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/vendor/simple-line-icons/css/simple-line-icons.css">
+
+  <!-- Plugin CSS -->
+  <link rel="stylesheet" href="/static/device-mockups/device-mockups.min.css">
+
+  <!-- Custom styles for this template -->
+  <link href="/static/css/new-age.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand js-scroll-trigger" href="#page-top">Back to top</a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link js-scroll-trigger" href="#login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link js-scroll-trigger" href="#register">Register</a>
+          </li>
+           <li class="nav-item">
+            <a class="nav-link js-scroll-trigger" href="#about">About</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <header class="masthead", id="login">
+    <div class="container h-100">
+      <div class="row h-100">
+        <div class="col-lg-7 my-auto">
+          <div class="header-content mx-auto">
+            <h1 class="mb-5">Welcome to my crypto trading web app!</h1>
+            <a href="/tradeview/login" class="btn btn-outline btn-xl js-scroll-trigger">Click to login!</a>
+
+          </div>
+        </div>
+        <div class="col-lg-5 my-auto">
+          <div class="device-container">
+            <div class="device-mockup iphone6_plus landscape white">
+              <div class="device">
+                <div id='screen' class="screen">
+                  <div id="bids" class="depth-chart">
+                  <h3>Bids</h3>
+                  </div>
+
+                  <div id="asks" class="depth-chart">
+                  <h3>Asks</h3>
+                  </div>
+                  <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
+                </div>
+                <div class="button">
+                  <!-- You can hook the "home button" to some JavaScript events or just remove it -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="cta" id="register">
+    <div class="cta-content">
+      <div class="container">
+        <h2>Stop waiting.<br>Start trading.</h2>
+        <a href="signup/" class="btn btn-outline btn-xl js-scroll-trigger">Let's Get Started!</a>
+      </div>
+    </div>
+    <div class="overlay"></div>
+  </section>
+  <section class="download bg-primary text-center" id="about">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 mx-auto">
+          <h2 class="section-heading">Virtual Exchange with real users combined with Bitstamp orderbook and simulated bot traffic.</h2>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; Your Website 2019. All Rights Reserved.</p>
+      <ul class="list-inline">
+        <li class="list-inline-item">
+          <a href="#">Privacy</a>
+        </li>
+        <li class="list-inline-item">
+          <a href="#">Terms</a>
+        </li>
+        <li class="list-inline-item">
+          <a href="#">FAQ</a>
+        </li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="/static/vendor/jquery/jquery.min.js"></script>
+  <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Plugin JavaScript -->
+  <script src="/static/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for this template -->
+  <script src="/static/js/new-age.min.js"></script>
+
+</body>
+
+</html>
+
+<script type="text/javascript">
+  /** BIDS =============================================== */
+  function bids (__id) {
+    console.log('hello');
+    console.log($('#screen').width());
+    var margin = {top: 12, right: 0, bottom: 12, left: 0},
+      width = $('#screen').width()/2.1
+       - margin.left - margin.right,
+      height = $('#screen').height()/1.1 - margin.top - margin.bottom
+    // set the ranges
+    var x = d3.scaleBand()
+      .range([0, width])
+      .padding(0.1)
+    var y = d3.scaleLinear()
+      .range([height, 0])
+    // append the svg object to a div ID
+    var svg = d3.select('#' + __id).append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+    var prefixSum = function (arr) {
+      var builder = function (acc, n) {
+        var lastNum = acc.length > 0 ? acc[acc.length-1] : 0;
+        acc.push(lastNum + n);
+        return acc;
+      };
+      return _.reduce(arr, builder, []);
+    }
+    var data = []
+    var __cum_data = []
+    // get the data
+    //d3.json('order_book2.json', function (__order_book) {
+      data = []
+      //console.log("Hello");
+
+
+      var __order_book = {{ orderbook|safe }};
+      // create cumulative data array
+      __cum_data = []
+      //console.log('__order_book bids', __order_book)
+      for (var i = 0; i < __order_book.bids.length; i++) {
+        __cum_data.push(__order_book.bids[i].amount)
+      }
+      var cum_data_array = prefixSum(__cum_data)
+
+      // final data array
+      for (var i = 0; i < __order_book.bids.length; i++) {
+        data.push({
+          idx: __order_book.bids[i].price,
+          orders: cum_data_array[i]
+        })
+      }
+
+      // reverse data for bids
+      data = _.reverse(data)
+      data.forEach(function (d) {
+        d.orders = +d.orders
+      })
+      // Scale the range of the data in the domains
+      x.domain(data.map(function (d) { return d.idx }))
+      y.domain([0, d3.max(data, function (d) { return d.orders })])
+      svg.selectAll('.bar-bids')
+        .remove('rect')
+      // append the rectangles for the bar chart
+      svg.selectAll('.bar')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('class', 'bar-bids')
+        .attr('x', function (d) { return x(d.idx) })
+        .attr('width', x.bandwidth())
+        .attr('y', function (d) { return y(d.orders) })
+        .attr('height', function (d) { return height - y(d.orders) })
+    //})
+  };
+  /** ASKS =============================================== */
+  function asks (__id) {
+    var margin = {top: 12, right: 0, bottom: 12, left: 0},
+      width = $('#screen').width()/2.1 - margin.left - margin.right,
+      height = $('#screen').height()/1.1 - margin.top - margin.bottom
+    // set the ranges
+    var x = d3.scaleBand()
+      .range([0, width])
+      .padding(0.1)
+    var y = d3.scaleLinear()
+      .range([height, 0])
+    // append the svg object to a div ID
+    var svg = d3.select('#' + __id).append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+    var prefixSum = function (arr) {
+      var builder = function (acc, n) {
+        var lastNum = acc.length > 0 ? acc[acc.length-1] : 0;
+        acc.push(lastNum + n);
+        return acc;
+      };
+      return _.reduce(arr, builder, []);
+    }
+    //var data = []
+    //var __cum_data = []
+    // get the data
+   // d3.json('order_book2.json', function (__order_book) {
+      var data = []
+      var __cum_data = []
+      var __order_book = {{ orderbook|safe }}
+      //console.log('__order_book asks', __order_book);
+      for (var i = 0; i < __order_book.asks.length; i++) {
+        __cum_data.push(__order_book.asks[i].amount)
+      }
+
+      // create cumulative data array
+      var cum_data_array = prefixSum(__cum_data)
+
+      // final data array
+      for (var i = 0; i < __order_book.asks.length; i++) {
+        data.push({
+          idx: __order_book.asks[i].price,
+          orders: cum_data_array[i]
+        })
+      }
+      data.forEach(function (d) {
+        d.orders = +d.orders
+      })
+      // Scale the range of the data in the domains
+      x.domain(data.map(function (d) { return d.idx }))
+      y.domain([0, d3.max(data, function (d) { return d.orders })])
+      svg.selectAll('.bar-asks')
+        .remove('rect')
+      // append the rectangles for the bar chart
+      svg.selectAll('.bar')
+        .data(data)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('class', 'bar-asks')
+        .attr('x', function (d) { return x(d.idx) })
+        .attr('width', x.bandwidth())
+        .attr('y', function (d) { return y(d.orders) })
+        .attr('height', function (d) { return height - y(d.orders) })
+    //})
+  };
+  // call functions with div ID's
+  bids("bids")
+  asks("asks")
+</script>
+<script>
+$(document).ready(function() {
+  $.ajaxSetup({ cache: false }); // This part addresses an IE bug.  without it, IE will only load the first number and will never refresh
+  console.log("Updating");
+  var my_refresh = setInterval(function() {
+    $('#screen').load('/tradeview/refresh_orderbook/');
+  }, 10000);
+});
+
+</script>

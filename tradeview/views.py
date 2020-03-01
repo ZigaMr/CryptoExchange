@@ -96,11 +96,10 @@ def portfolio_helper(df):
         unrealized = x[x.cum_vol > vol].profit.sum() - p
         un_vol = df[~df.buy].volume.sum() - vol
 
-    return [sell_p+buy_p, unrealized, vol, un_vol, df.volume.sum()]
+    return [sell_p+buy_p, round(unrealized, 10), round(vol, 10), round(un_vol, 10), df.volume.sum()]
 
 def update_session(request):
-    # if not request.is_ajax() or not request.method=='POST':
-    #     return HttpResponseNotAllowed(['POST'])
+    #Change the Trade Pair
 
     request.session['coin_pair'] = max((request.session['coin_pair'] + 1) % (Pairs.objects.count() + 1),1)
     form=UserBids()

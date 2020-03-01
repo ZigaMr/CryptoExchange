@@ -97,7 +97,7 @@ def get_data(orders_local):
         print(buy, sell)
         asks_final = asks_final.append(asks)
         bids_final = bids_final.append(bids)
-        time.sleep(1)#int(sys.argv[1]))
+        time.sleep(5)#int(sys.argv[1]))
     if not trades.empty:
         trades = trades.rename(columns={'id_pair': 'pair_id'})
         trades.columns = [i.lower() for i in trades.columns]
@@ -120,7 +120,6 @@ def internal_matching(df):
         return df
     modify_orders, delete_orders = dict(), []
     trades = pd.DataFrame(columns=['user', 'timestamp', 'volume', 'price', 'buy', 'pair_id'])
-
 
     for pair in df.pair_id.unique():
         asks = df[(~df.buy) & (df.pair_id == pair)].sort_values('price', ascending=True)
